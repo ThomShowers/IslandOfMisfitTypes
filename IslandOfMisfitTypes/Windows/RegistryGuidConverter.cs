@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using IslandOfMisfitTypes.Collections;
 using IslandOfMisfitTypes.Linq;
 
 namespace IslandOfMisfitTypes.Windows
@@ -55,13 +56,12 @@ namespace IslandOfMisfitTypes.Windows
         /// <returns>The converted <see cref="Guid"/>.</returns>
         public static Guid Convert(Guid target)
         {
-            var guidStr = target.ToString("N");
-            var substrings = guidStr.Batch(new[] { 8, 4, 4, 2, 2, 2, 2, 2, 2, 2, 2 });
-            var convertedSubstrings = substrings.Select(s => s.Reverse());
-            var reconstitutedEnumerable = convertedSubstrings.SelectMany(s => s);
-            var convertedStr = string.Concat(reconstitutedEnumerable);
-            var convertedGuid = Guid.Parse(convertedStr);
-            return convertedGuid;
+            return
+                Guid.Parse(
+                    string.Concat(
+                        target.ToString("N")
+                        .Batch(new[] { 8, 4, 4, 2, 2, 2, 2, 2, 2, 2, 2 })
+                        .SelectMany(s => s.Reverse())));
         }
     }
 }
