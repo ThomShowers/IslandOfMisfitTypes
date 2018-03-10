@@ -286,6 +286,46 @@ namespace IslandOfMisfitTypes.UnitTests.Collections
             }
             Assert.True(seriesSpy.Verify());
         }
+
+        [Fact]
+        public void GetEnumerator_ReturnsSeries()
+        {
+            var expected = new[] { 1, 2, 3, 4, 5 };
+            var series = new Series<int>(1, a => a + 1);
+            var actual = series.Take(expected.Length);
+            Assert.True(expected.SequenceEqual(actual));
+        }
+
+        [Fact]
+        public void GetEnumerator_AfterNext_StartsFromInitialValues()
+        {
+            var expected = new[] { 1, 2, 3, 4, 5 };
+            var series = new Series<int>(1, a => a + 1);
+            series.Next();
+            var actual = series.Take(expected.Length);
+            Assert.True(expected.SequenceEqual(actual));
+        }
+
+        [Fact]
+        public void GetEnumerator_DoesNotAdvanceSeriesInstance()
+        {
+            var expected = new[] { 1, 2, 3, 4, 5 };
+            var series = new Series<int>(1, a => a + 1);
+            series.Take(expected.Length).ToArray(); // force evaluation
+            Assert.Equal(expected[0], series.Next());
+        }
+
+        [Fact]
+        public void GetEnumerator_EnumeratorCanBeReset()
+        {
+            var expected = new[] { 1, 2, 3, 4, 5 };
+            var series = new Series<int>(1, a => a + 1);
+            var enumerator = series.GetEnumerator();
+            enumerator.MoveNext();
+            enumerator.Reset();
+            var actual = series.Take(expected.Length);
+            Assert.True(expected.SequenceEqual(actual));
+        }
     }
 
     internal class SeriesSpy

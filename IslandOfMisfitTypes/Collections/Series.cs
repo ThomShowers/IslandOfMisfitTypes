@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,9 +13,16 @@ namespace IslandOfMisfitTypes.Collections
     /// the last last N return values (from oldest to newest) to the given function.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// Enumerating this type will always start at the beginning of the series and will not affect
+    /// the state of the object or calls to <see cref="Next"/>. Note that the enumeration is
+    /// infinite so it is up to the caller to ensure something will eventually break.
+    /// </para>
+    /// <para>
     /// This type is not threadsafe.
+    /// </para>
     /// </remarks>
-    public class Series<T>
+    public class Series<T> : IEnumerable<T>
     {
         private readonly T[] _initialValues;
         private readonly Queue<T> _pendingArguments;
@@ -145,6 +153,12 @@ namespace IslandOfMisfitTypes.Collections
         }
 
         /// <summary>
+        /// Gets an enumerator for the values of the series.
+        /// </summary>
+        /// <returns>An enumerator for the values of the series.</returns>
+        public IEnumerator<T> GetEnumerator() => new SeriesEnumerator(this);
+
+        /// <summary>
         /// Gets the next term in the series.
         /// </summary>
         /// <returns>The next term in the series.</returns>
@@ -170,6 +184,42 @@ namespace IslandOfMisfitTypes.Collections
             while (_pendingArguments.Count > 0)
             {
                 _pendingArguments.Dequeue();
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        private class SeriesEnumerator : IEnumerator<T>
+        {
+            private readonly Series<T> _series;
+            private bool _enumerationStarted;
+
+            public SeriesEnumerator(Series<T> series)
+            {
+                if (series == null)
+                {
+                    throw new ArgumentNullException(nameof(series));
+                }
+                _series = new Series<T>(series);
+            }
+
+            public T Current { get; private set; }
+
+            object IEnumerator.Current => Current;
+
+            public void Dispose() { }
+
+            public bool MoveNext()
+            {
+                _enumerationStarted = true;
+                Current = _series.Next();
+                return true;
+            }
+
+            public void Reset()
+            {
+                _series.Reset();
+                _enumerationStarted = false;
             }
         }
     }
